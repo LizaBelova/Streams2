@@ -11,15 +11,15 @@ class threadSafeStack
 {
 private:
 	std::stack<T> arr; //сам стэк
-	mutex m; //ìüþòýêñ
+	mutex m; //мьютэкс
 public:
 	void push(const T& obj)
 	{
-        lock_guard<mutex>lock(m); // áëîêèðóåì ñòýê äëÿ äðóãèõ ïîòîêîâ
+        lock_guard<mutex>lock(m); //блокируем стэк для других потоков
         cout << this_thread::get_id() << ". Push " << obj << "\n";
         arr.push(obj); 
  	}
- 	T pop() // âûòàëêèâàíèå ïî çíà÷åíèþ
+ 	T pop() //выталкивание по значению
 	{ 
         lock_guard<mutex>lock(m);
 		if (arr.empty())
@@ -33,7 +33,7 @@ public:
 		}
 	}
 	
-	shared_ptr<T>  getClass() // âûòàëêèâàíèå ïî óêàçàòåëþ
+	shared_ptr<T>  getClass() //выталкивание по указателю
 	{
 		lock_guard<mutex>lock(m);
 		if (arr.empty())
@@ -71,11 +71,11 @@ void func_thread3(threadSafeStack<int> &arr)
  
 int main()
 { 
-    threadSafeStack<int> st; //ñîçäà¸ì îáúåêò "áåçîïàñíûé ñòýê"
-    thread thread1(func_thread1, ref(st)); //èíèöèàëèçèðóåì ïîòîê, ïåðåäàâ åìó èìÿ ôóíêöèè, êîòîðàÿ äîëæíà âûïîëíÿòüñÿ â ýòîì ñàìîì ïîòîêå. Âòîðîé àðãóìåíò - ýòî óæå ïåðâûé àðãóìåíò òîé ñàìîé ôóíêöèè 
+    threadSafeStack<int> st; //создаём объект "безопасный стэк"
+    thread thread1(func_thread1, ref(st)); //инициализируем поток, передав ему имя функции, которая должна выполняться в этом самом потоке. Второй аргумент - это уже первый аргумент той самой функции 
     thread thread2(func_thread2, ref(st));
     thread thread3(func_thread3, ref(st));
-    thread1.detach(); //óäàëÿåò ññûëêó íà ïîòîê + ïîñûëàåò ïîòîêó ñèãíàë î åãî çàâåðøåíèè, âîçìîæíî, íå äîðàáîòàâ äî êîíöà, íî áåçîïàñíî
+    thread1.detach(); //удаляет ссылку на поток + посылает потоку сигнал о его завершении, возможно, не доработав до конца, но безопасно
     thread2.detach();
     thread3.join();
     return 0; 
